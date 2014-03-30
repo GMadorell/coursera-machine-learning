@@ -104,7 +104,18 @@ fprintf('\n');
 % ====================== YOUR CODE HERE ======================
 % Recall that the first column of X is all-ones. Thus, it does
 % not need to be normalized.
-price = 0; % You should change this
+predict_data = [1650, 3];
+
+% Normalize it.
+for i = 1: size(mu, 1)
+	predict_data(1, i) = (predict_data(1, i) - mu(1, i)) / sigma(1, i);
+end
+
+% Add intercept term.
+predict_data = [1 predict_data];
+
+% Finally predict the price.
+price = predict_data * theta;
 
 
 % ============================================================
@@ -115,7 +126,7 @@ fprintf(['Predicted price of a 1650 sq-ft, 3 br house ' ...
 fprintf('Program paused. Press enter to continue.\n');
 pause;
 
-%% ================ Part 3: Normal Equations ================
+% %% ================ Part 3: Normal Equations ================
 
 fprintf('Solving with normal equations...\n');
 
@@ -149,7 +160,13 @@ fprintf('\n');
 
 % Estimate the price of a 1650 sq-ft, 3 br house
 % ====================== YOUR CODE HERE ======================
-price = 0; % You should change this
+predict_data = [1650, 3];
+
+% Add intercept term.
+predict_data = [1 predict_data];
+
+% Finally predict the price.
+price = predict_data * theta;
 
 
 % ============================================================
