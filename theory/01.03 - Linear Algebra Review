@@ -1,0 +1,126 @@
+
+MATRICES AND VECTORS
+ - Matrix = Rectangular array of numbers.
+ 	  A = [ 1000 191 
+ 		    200  70 
+ 		    500 121 ]
+ 	- Dimension = n_rows * n_columns (above is 3*2).
+ 	- Aij = "i, j" entry of the matrix A,
+ 	        which is the entry in the ith row and jth column.
+ 	        A1,1 = 1000, A[2, 2] = 70
+ 
+ - Vector: it's just an nx1 matrix (a matrix with only one column).
+ 	- We use only one index to access to a vector's element:
+ 		Ai = ith element of the vector (ith row).
+
+ - Uppercase variables: Matrices.
+ - Lowercase variables: Vectors.
+
+
+ADDITION AND SCALAR MULTIPLICATION
+ - Addition	
+	[ 1 0     [ 4 0.5     [ 1+4 0+0.5 
+	  2 5   +   2 5    =    2+2 5+5
+	  3 1 ]     0 1   ]     3+0 1+1   ]
+
+	- We can only add two matrices if they have the same dimensions.
+ 
+ - Scalar multiplication
+ 	[ 1 0         [ 3*1 3*0 
+	  2 5   * 3 =   3*2 3*5
+	  3 1 ]         3*3 3*1 ]
+
+
+MATRIX VECTOR MULTIPLICATION
+ - Example:
+ 	[ 1 0             [ 1*1 + 5*0 
+	  2 5   * [ 1   =   1*2 + 5*5
+	  3 1 ]     5 ]     1*3 + 3*1 ]
+
+	Dimensions = 3*2 * 2*1 = 3*1
+
+ - Practical example:
+ 	- In our linear regression problem, we have an h(x) = -40 + 0.25x
+ 		If want to apply h(x) to all the sizes, we can do that with a single matrix
+ 		product (for example when applying the prediction after training.)
+ 		[ 1 2000 
+          1 1000    
+          1 3000    * [ -40     = A vector with the results of the 
+          1 ...  ]      0.25 ]    multiplication in a way that the ith row of 			
+        we need to add		      the vector is the result for the ith size.
+        a column of ones 
+        before the sizes so
+        dimensionality matches.
+
+        Prediction = DataMatrix * Parameters.
+
+
+MATRIX MATRIX MULTIPLICATION
+ - Example:
+ 	[ 1 3 2     [ 1 3     [ 1*1 + 3*0 + 2*5 || 1*3 + 3*3 + 2*2 
+      4 0 1 ] *   0 1   =   4*1 + 0*0 + 1*5 || 4*3 + 0*1 + 1*2 ]
+                  5 2 ]
+
+    Dimensionality: 2*3 * 3*2 -> 2*2
+
+    - NEATEST TRICK EVER!!!
+    To do above multiplication, we can separate the matrix on the right onto different
+    vectors (column matrices), do that multiplications and then join the results!!!
+
+    	1.- First column:
+    		[ 1 3 2     [ 1     [ a
+      		  4 0 1 ] *   0   =   b ]
+                  		  5 ]
+
+        2.- Second column:
+        	[ 1 3 2     [ 3     [ c
+      		  4 0 1 ] *   1   =   d ]
+                  		  2 ]
+
+        3.- Join results:
+        	[ 1 3 2     [ 1 3     [ a c 
+		      4 0 1 ] *   0 1   =   b d ]
+		                  5 2 ]     
+    
+    - We basically look at the columns of the right matrix one at the time and then we 
+      assemble the results.
+
+ - Practical example:
+ 	- Applying this trick and the example of the house hyphotesis prediction, we can
+ 	  calculate more than one hyphotesis with a single matrix multiplication, simply
+ 	  adding more columns (where each of them is a different hyphotesis) on the right
+ 	  matrix.
+
+ 	  It's like every column on the right matrix is completely independent from the 
+ 	  other ones (because we can separate them, do the computation as if they were
+ 	  a mere vector and then assemble the results).
+
+ 	  [ 1 2000 
+        1 1000    
+        1 3000    * [ -40   20  30     = A matrix where each column will be the
+        1 ...  ]      0.25  0.1 0.15 ]   result of applying one hypothesis. 
+
+
+MATRIX MULTIPLICATION PROPERTIES
+ - Associative = order of multiplication doesn't matter. (A*B*C == (A*B)*C == A*(B*C))
+ - Commutative = AxB == BxA.
+
+ - Matrices ARE associative.
+ - Matrices ARE NOT commutative, except for some cases such as the I matrix.
+
+
+INVERSE AND TRANSPOSE
+ - Inverse:
+	- Given A and B, A is inverse of B (and B of A) <-> A*B = B*A = I.
+	  In other words: A*A^-1 = A^-1*A = I.
+	 
+	- Only square matrices can have inverses.
+	- Not all square matrices have an inverse.
+ 
+ - Transpose:
+ 	- A = [1 2 0   --> A^t = [1 3
+           3 5 9]             2 5
+                              0 9]
+    - Formal definition:
+    	Let A be an mxn matrix, and let B = A^t.
+    	Then B is an nxm matrix and Bij = Aji for all elements of B.  

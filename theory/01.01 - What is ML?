@@ -1,0 +1,37 @@
+
+
+WHAT IS ML?
+
+ML: Field of study that gives computer the ability to learn without being explicity programmed.
+
+More recent definition:
+A computer program is said to learn from experience E with respect to some task T and some performance measure P, if its performance on T, as measured by P, improves with E.
+
+ML algs:
+	- Supervised learning.
+	- Unsupervised learning.
+	- Reinforcement learning.
+	- Recommender systems.
+
+
+SUPPERVISED LEARNING
+The datased has the right answers for the training data.
+
+ - Regression: Predict continuous valued output (price house based on m2, for example).
+ - Classification: Predict discrete valued output (cancer, benign vs malignant based 
+   on its size, for example).
+
+
+UNSUPERVISED LEARNING
+The dataset DOES NOT have the answers for the training data.
+
+ - Clustering:
+	Algos create clusters with the datasets and try to separate points into different groups.
+
+	Ex: organize computing clusters, market segmentation, social network analysis, astronomical data analysis.
+ 
+ 
+
+
+
+

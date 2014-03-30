@@ -1,0 +1,91 @@
+
+
+ - Before, we had only one feature and one target variable (x and y).
+ - Now, we'll have >1 feature and one target variable.
+    - Features will be noted with the form Xi.
+    - n = n_features (columns)
+    - m = n_samples (rows)
+    - x[i] = input features of the ith training sample.
+    - x[i][j] = value of feature j in ith trainig sample.
+ 
+ - Hyphotesis:
+    - Before was: hθ(x) = θ0 + θ1*x
+    - Now: hθ(x) = θ0 + θ1*x1 + θ2*x2 + ... + θn*xn
+        - For convenience, define x0 = 1. (x[i][0] will always equal 1).
+          This is done prepending a feature full of ones to the data.
+          This way we can write formulas in a easier way.
+        - Then: hθ(x) = θ0*x0 + θ1*x1 + θ2*x2 + ... + θn*xn
+        - This means we can rewrite the h in matricial form.
+            hθ(x) = θ^t*x    | theta transposed.
+            where θ is the vector of thethas.
+
+ - The cost function now takes only a vector as parameter.
+    J(θ) =  1/(2m) * [sum x over training_samples(or m)] (h(x) - y)^2
+
+ - Gradient descend:
+    repeat until convergence:
+        θj := θj - alpha * [derivate over θj(J(θ)]
+            where alpha is the learning rate.
+ 
+ - Derivative of the cost function:
+    [derivate over θj(J(θ)] =
+            1/m * [sum x over training_samples(or m)] ((h(x) - y)^2 * x)
+
+ - Scaling the features is important, as it can make the descend that 
+   much faster.
+    - Scale into -1 <= x <= 1 range (aproximately).
+    - Don't worry if all the features aren't in the same scale,
+      the algorithm will work just fine.
+      For example, -3 <= x <= 3 is fine, as well as 1/3 <= x <= 1/3, but
+      higher/lower than that -> scale.
+    - Mean normalization:
+        Make your features have zero mean.
+        Substract the mean and divide by [stddev | max-min] (or).
+ 
+ - J should decrease after every iteration.
+    - If it's always increasing, try setting a smaller alpha.
+    - If it goes up and down -> smaller alpha.
+    - Good idea to try a range of alphas: 0.001, 0.03, 0.01, (multiply by ~3).
+ - Almost impossible to tell how many iters are needed.
+ - Automatic convergence test:
+   Declare convergence if J decreases less than a threshold in one iter.
+
+
+ - Polynomial regression:
+    - Having squared, cubic features, square root...
+      hθ(x) = θ0*x0 + θ1*x1^2 + θ2*x1^3 ...
+    - Simply preprocess the data to have that features
+      in the data matrix before running the algorithm.
+    - Important! Scale the data AFTER preprocessing.
+    - He talked about algorithms for automatic feature selection???¿?
+
+
+ - Normal equation:
+    - Substitutes gradient descent.
+    - Solve θ analytically -> one step.
+    - Octave implementation: θ = pinv(X'*X)*X'*y
+    - No need to scale features with this method.
+
+
+
+    Gradient descent       vs     Normal equation
+     - Need to choose alpha.       - No need to choose alpha.
+     - Needs many iters.           - No iteration (analitycal).
+
+     - Works well even when n      - Slow if n is large (multiply X
+       (amount features) is          by it's transposed, and then
+       large (large meaning          calculate the inverse matrix (O(n^3))).   
+       n > 10000).                      
+                                   
+
+
+finished 4 - 5.
+
+mean = 6675.5
+range = 4075
+
+
+ended 4.2
+
+
+

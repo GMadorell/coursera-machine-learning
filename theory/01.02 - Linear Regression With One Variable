@@ -1,0 +1,102 @@
+
+MODEL REPRESENTATION
+ex: Predict price of houses according to their size having the Prices and the Sizes of some houses.
+It's a regression, supervised learning problem.
+
+notation:
+	- m = number of training examples.
+	- x = input variable / feature.
+	- y = output variable / target.
+(x, y) -> training example.
+(x^i, y^i) -> ith training example.
+
+Pipeline:
+	1.- Train: Training Set -> Algorithm -> h (hypothesis)
+	2.- Predict: Then, with new data, size_of_house -> h -> estimated_price
+
+h is hθ(x) = θ0 + θ1*x in this concrete problem. 
+h(x) is the same as hθ(x), used as a shortcut.
+This is called linear regression with one variable or univariate linear regression.
+
+
+COST FUNCTION
+ - Used to know what's the best line we can fit on our data.
+ - How to search for θ0 and θ1? -> Cost function.
+
+How to train?
+Choose θ0 and θ1 so that h(x) is close to y for our training examples.
+So, we have a minimization problem:
+	minimize θ0 and θ1: 1/(2m) * [sum x over training_samples(or m)] (h(x) - y)^2 
+	plain english: find θ0 and θ1 so the difference between h(x) and y over all the
+				   dataset are minimal.
+
+	We can reword that to have our Cost Function:
+	J(θ0, θ1) = 1/(2m) * [sum x over training_samples(or m)] (h(x) - y)^2,
+		where h(x) = θ0 + θ1*x
+	Our goal is to minimize J.
+	This function is also called the squared error function.
+
+
+COST FUNCTION - INTUITION 1
+We use a simplified version of the hypothesis function
+that only has the θ1 variable: 
+		h(x) = θ1*x
+
+    Imagine a dataset:
+    	x	y
+    	1	1
+    	2 	2
+    	3	3
+
+    Then, a value of θ1 = 1 means that the line fits all the points perfectly,
+    and thus the value of the cost function is 0.
+
+    But, if we have a different value of θ1, then the cost function is > 0,
+    basically doing a parabole with the smaller value on θ1 = 1.    
+
+    So, in this example, as we're minimizing J(θ1) -> solution = 0.
+
+
+COST FUNCTION - INTUITION 2
+
+GRADIENT DESCENT
+ - Algorithm used to find the optimal value of J automatically.
+ - We will see the algorithm in a generic way, and later on to this particular problem.
+
+ General idea:
+ 	- Start with some θ values.
+ 	- Keep changing θ values until we end up at a local minimum.
+
+ Formulae:
+ 	repeat until convergence:
+ 		θj := θj - alpha * [derivate over θj(J(θ0, θ1, ... , θn)]
+ 			where alpha is the learning rate.
+
+ 	Note: all values of θj (in our case θ0 and θ1) need to be SIMULTANIOUSLY UPDATED,
+ 		so we must first calculate the right part of the := for all values and afterwards update the thethas doing the assignment.
+
+
+GRADIENT DESCENT INTUITON
+ - alpha small -> gradient descent slow.
+ - alpha too large -> gradient descent might fail to converge.
+ - we don't need to change alpha over time, because gradient descent will automatically
+   take smaller steps over time.
+
+
+GRADIENT DESCENT FOR LINEAR REGRESSION
+ - For linear regression, 
+ 		J(θ0, θ1) = 1/(2m) * [sum x over training_samples(or m)] (h(x) - y)^2
+
+ - So the derivative of the cost function is:
+ 		[derivate over θj(J(θ0, θ1, ... , θn)] =
+ 			1/m * [sum x over training_samples(or m)] ((h(x) - y)^2 * x)
+
+ - We use "batch" gradient descent, meaning that every step of the algorithm uses all
+   the training samples.
+
+ - 
+
+
+
+
+
