@@ -18,10 +18,26 @@ for iter = 1:num_iters
     %
 
 
+    predictions = X * theta;
+    
+    
+%     delta = sum(predictions - y) * X;
+%     theta = theta - alpha * (1/m) * delta;
+    
+    amount_theta = size(theta, 1);
+    
+    new_theta = zeros(amount_theta, 1);
 
-
-
-
+    for i=1:amount_theta
+        sum = 0;
+        for j=1:m
+            sum = sum + (predictions(j, 1) - y(j, 1)) * X(j, i);
+        end
+        
+        new_theta(i) = theta(i) - alpha * (1/m) * sum;
+    end
+    
+    theta = new_theta;
 
     % ============================================================
 

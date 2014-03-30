@@ -13,7 +13,10 @@ J = 0;
 % Instructions: Compute the cost of a particular choice of theta
 %               You should set J to the cost.
 
+% This gets the expected values of the variables.
+hypothesis = X * theta;  
 
+J = 1/(2*m) * sum((hypothesis - y) .^ 2);
 
 
 
