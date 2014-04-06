@@ -15,11 +15,13 @@ p = zeros(m, 1);
 %               You should set p to a vector of 0's and 1's
 %
 
+predicted_probability = sigmoid(X * theta);
 
+positive = predicted_probability >= 0.5;
+negative = predicted_probability < 0.5;
 
-
-
-
+p(positive, 1) = 1;
+p(negative, 1) = 0;
 
 % =========================================================================
 
