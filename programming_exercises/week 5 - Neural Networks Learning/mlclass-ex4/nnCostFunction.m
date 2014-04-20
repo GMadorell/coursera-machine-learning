@@ -38,7 +38,30 @@ Theta2_grad = zeros(size(Theta2));
 %         variable J. After implementing Part 1, you can verify that your
 %         cost function computation is correct by verifying the cost
 %         computed in ex4.m
-%
+
+% Adapt y to be represented with K elements.
+adapted_y = zeros(size(y, 1), num_labels);
+for i = 1:size(y, 1)
+    adapted_y(i, y(i, 1)) = 1;
+end
+
+a1 = [ones(m, 1) X];
+z2 = [ones(m, 1) X] * Theta1';
+a2 = sigmoid(z2);
+z3 = [ones(m, 1) a2] * Theta2';
+a3 = sigmoid(z3);
+
+J = 0;
+for i = 1:m, 
+    for k = 1:num_labels,
+        J = J + ...
+            (-adapted_y(i, k)*log(a3(i, k)) - (1 - adapted_y(i, k)) * log(1 - a3(i, k)));
+    end
+end
+
+J = J * 1/m;
+
+
 % Part 2: Implement the backpropagation algorithm to compute the gradients
 %         Theta1_grad and Theta2_grad. You should return the partial derivatives of
 %         the cost function with respect to Theta1 and Theta2 in Theta1_grad and
@@ -54,6 +77,31 @@ Theta2_grad = zeros(size(Theta2));
 %               over the training examples if you are implementing it for the 
 %               first time.
 %
+
+Delta2 = 0;
+Delta1 = 0;
+for instance = 1:m
+    x = X(instance, :);
+
+    % FP
+    a1 = [1; X(instance,:)'];
+    z2 = Theta1 * a1;
+    a2 = [1; sigmoid(z2)];
+    z3 = Theta2 * a2;
+    a3 = sigmoid(z3);
+
+
+    d3 = a3 - adapted_y(instance, :)';
+
+    d2 = (Theta2(:,2:end)'* d3) .* sigmoidGradient(z2);
+
+    Delta1 = Delta1 + (d2 * a1');
+    Delta2 = Delta2 + (d3 * a2');
+end
+Theta1_grad = (1/m) * Delta1;
+Theta2_grad = (1/m) * Delta2;
+
+
 % Part 3: Implement regularization with the cost function and gradients.
 %
 %         Hint: You can implement this around the code for
@@ -62,6 +110,26 @@ Theta2_grad = zeros(size(Theta2));
 %               and Theta2_grad from Part 2.
 %
 
+% Cost function regularization.
+% Note that we start k at 2 because we must ignore the bias
+% units weights.
+regularization = 0;
+for j = 1:size(Theta1, 1)
+    for k = 2:size(Theta1, 2)
+        regularization = regularization ...
+            + Theta1(j, k)^2;
+    end
+end
+
+for j = 1:size(Theta2, 1)
+    for k = 2:size(Theta2, 2)
+        regularization = regularization ...
+            + Theta2(j, k)^2;
+    end
+end
+
+regularization = regularization * lambda / (2*m);
+J = J + regularization;
 
 
 

@@ -12,17 +12,8 @@ g = zeros(size(z));
 % Instructions: Compute the gradient of the sigmoid function evaluated at
 %               each value of z (z can be a matrix, vector or scalar).
 
-
-
-
-
-
-
-
-
-
-
-
+sig_z = sigmoid(z);
+g = sig_z .* (1 - sig_z);
 
 
 % =============================================================
