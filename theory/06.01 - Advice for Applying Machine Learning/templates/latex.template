@@ -1,0 +1,71 @@
+
+
+\documentclass{% if font_size %}[{{ font_size }}]{% endif %}{ {{ document_class }} }
+
+\usepackage[utf8]{inputenc}
+\usepackage{extsizes} % Allow for more sizes suchas 14pt or 17pt on document class.
+\usepackage{mathtools} % Allows conditional math expressions, etc.
+
+% Don't output references in case they're empty - http://tex.stackexchange.com/questions/74476/how-to-avoid-empty-thebibliography-environment-bibtex-if-there-are-no-refere
+{% raw %}
+\let\myBib\thebibliography
+\let\endmyBib\endthebibliography 
+\renewcommand\thebibliography[1]{\ifx\relax#1\relax\else\myBib{#1}\fi}
+{% endraw %}
+
+\begin{document} 
+
+
+
+%% Front page.
+{% if title -%}
+    \title{ {{ title }} }
+
+    {% if date and date != "\\today" %}
+    \renewcommand{\today}{ {{ date }} }
+    {% elif not date %}
+    \date{}
+    {% endif %}
+
+    {% if authors -%}
+        \author{
+            {% for author in authors -%}
+                {{ author }} \\
+            {% endfor -%}
+        }
+    {% endif %}
+
+    \maketitle
+
+\newpage
+{% endif -%}
+
+
+%% Abstract page.
+{% if abstract %}
+\begin{abstract}
+    {{ abstract }}
+\end{abstract}
+\newpage
+{% endif %}
+
+%% Table of contents page.
+{% if table_contents %}
+\tableofcontents
+\newpage
+{% endif %}
+
+
+%% Body start.
+{{body}}
+
+%% Body end.
+
+%% Bibliography.
+{% if not citations_found %}
+    \nocite{*}
+{% endif %}
+\bibliographystyle{ {{ bibliography_style }} }
+\bibliography{references}
+
+\end{document}
