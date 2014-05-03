@@ -1,43 +1,3 @@
-
-
-\documentclass[10pt]{extarticle}
-
-\usepackage[utf8]{inputenc}
-\usepackage{extsizes} % Allow for more sizes such as 14pt or 17pt on document class.
-\usepackage{mathtools} % Allows conditional math expressions, etc.
-
-% Don't output references in case they're empty - http://tex.stackexchange.com/questions/74476/how-to-avoid-empty-thebibliography-environment-bibtex-if-there-are-no-refere
-
-\let\myBib\thebibliography
-\let\endmyBib\endthebibliography
-
-\renewcommand\thebibliography[1]{\ifx\relax#1\relax\else\myBib{#1}\fi}
-
-
-\begin{document} 
-
-
-
-%% Front page.
-\title{07.01 - Support Vector Machines}
-
-    
-    \date{}
-    
-
-    
-
-    \maketitle
-
-\newpage
-%% Abstract page.
-
-
-%% Table of contents page.
-
-
-
-%% Body start.
 \section{Optimization objective}\label{optimization-objective}
 
 In support vector machine, we don't directly have $\lambda$. Instead, C
@@ -45,6 +5,10 @@ is used, which penalizes the training set instead of the $\theta$. In
 reality, it's almost the same, as we can set a small value for C and
 then we're giving more importance to the regularization term. We could
 think of $C = \frac{1}{\lambda}$.
+
+Informally, the C parameter is a positive value that controls the
+penalty for misclassified training examples. A large C parameter tells
+the SVM to try to classify all the examples correctly. \smallskip
 
 A part from that, the objective function (minimizing cost function) is
 almost the same as the logistic regression one:
@@ -171,15 +135,3 @@ they're way slower to train.
 
 SVMs don't have to worry about local optima, because they solve a convex
 problem. NN may have problems with that, though.
-
-
-%% Body end.
-
-%% Bibliography.
-
-    \nocite{*}
-
-\bibliographystyle{plain}
-\bibliography{references}
-
-\end{document}
