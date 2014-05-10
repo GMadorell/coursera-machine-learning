@@ -1,0 +1,107 @@
+
+\RequirePackage[l2tabu, orthodox]{nag} % Complaints if syntax isn't right.
+\documentclass{% if font_size %}[{{ font_size }}]{% endif %}{ {{ document_class }} }
+
+\usepackage[utf8]{inputenc}
+\usepackage{extsizes} % Allow for more sizes such as 14pt or 17pt on document class.
+\usepackage{mathtools} % Allows conditional math expressions, etc.
+\usepackage{amsfonts} % Allows \mathbb{R}, which is the real numbers symbol.
+\usepackage{graphicx} % Allows \includegraphics.
+
+% For writing pseudocode snippets: http://ctan.mackichan.com/macros/latex/contrib/algorithmicx/algorithmicx.pdf
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+% Layout the document: http://texdoc.net/texmf-dist/doc/latex/geometry/geometry.pdf
+\usepackage[{{ geometry_layout }}]{geometry}
+
+\usepackage{microtype} % Makes document more readable by optimizing space between letters.
+
+\usepackage{units} % Adds \nicefrac{1}{2}: (½), \unit[5]{m}{s}: 5 m/s.
+
+\usepackage[colorlinks=false, pdfborder={0 0 0}]{hyperref} % Allow clicking references and the table of contents in pdfs.
+\usepackage{cleveref} % Adds fig/formula etc. before references (use \cref).
+
+%%% New commands.
+
+% Don't output references in case they're empty - http://tex.stackexchange.com/questions/74476/how-to-avoid-empty-thebibliography-environment-bibtex-if-there-are-no-refere
+{% raw %}
+\let\myBib\thebibliography
+\let\endmyBib\endthebibliography 
+\renewcommand\thebibliography[1]{\ifx\relax#1\relax\else\myBib{#1}\fi}
+{% endraw %}
+
+% Norm -> ||something||
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+
+% Stdfig -> Used as \stdfig{label_name}{caption}
+% Requires: image called 'caption' in img folder.
+% Output: A figure with horizontal size the same as the document,
+%         labeled as 'fig:label_name'
+{% raw %}
+\newcommand{\stdfig}[2]{
+    \begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{img/#1.eps}
+    \caption{#2}
+    \label{fig:#1}
+    \end{figure}
+}
+{% endraw %}
+
+\begin{document} 
+
+
+
+%% Front page.
+{% if title -%}
+    \title{ {{ title }} }
+
+    {% if date and date != "\\today" %}
+    \renewcommand{\today}{ {{ date }} }
+    {% elif not date %}
+    \date{}
+    {% endif %}
+
+    {% if authors -%}
+        \author{
+            {% for author in authors -%}
+                {{ author }} \\
+            {% endfor -%}
+        }
+    {% endif %}
+
+    \maketitle
+
+\newpage
+{% endif -%}
+
+
+%% Abstract page.
+{% if abstract %}
+\begin{abstract}
+    {{ abstract }}
+\end{abstract}
+\newpage
+{% endif %}
+
+%% Table of contents page.
+{% if table_contents %}
+\tableofcontents
+\newpage
+{% endif %}
+
+
+%% Body start.
+{{body}}
+
+%% Body end.
+
+%% Bibliography.
+{% if not citations_found %}
+    \nocite{*}
+{% endif %}
+\bibliographystyle{ {{ bibliography_style }} }
+\bibliography{references}
+
+\end{document}

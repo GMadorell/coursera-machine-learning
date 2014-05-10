@@ -1,0 +1,239 @@
+
+\RequirePackage[l2tabu, orthodox]{nag} % Complaints if syntax isn't right.
+\documentclass[10pt]{extarticle}
+
+\usepackage[utf8]{inputenc}
+\usepackage{extsizes} % Allow for more sizes such as 14pt or 17pt on document class.
+\usepackage{mathtools} % Allows conditional math expressions, etc.
+\usepackage{amsfonts} % Allows \mathbb{R}, which is the real numbers symbol.
+\usepackage{graphicx} % Allows \includegraphics.
+
+% For writing pseudocode snippets: http://ctan.mackichan.com/macros/latex/contrib/algorithmicx/algorithmicx.pdf
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+% Layout the document: http://texdoc.net/texmf-dist/doc/latex/geometry/geometry.pdf
+\usepackage[top=3.5cm, bottom=3.5cm, left=3.5cm, right=3.5cm]{geometry}
+
+\usepackage{microtype} % Makes document more readable by optimizing space between letters.
+
+\usepackage{units} % Adds \nicefrac{1}{2}: (½), \unit[5]{m}{s}: 5 m/s.
+
+\usepackage[colorlinks=false, pdfborder={0 0 0}]{hyperref} % Allow clicking references and the table of contents in pdfs.
+\usepackage{cleveref} % Adds fig/formula etc. before references (use \cref).
+
+%%% New commands.
+
+% Don't output references in case they're empty - http://tex.stackexchange.com/questions/74476/how-to-avoid-empty-thebibliography-environment-bibtex-if-there-are-no-refere
+
+\let\myBib\thebibliography
+\let\endmyBib\endthebibliography
+
+\renewcommand\thebibliography[1]{\ifx\relax#1\relax\else\myBib{#1}\fi}
+
+
+% Norm -> ||something||
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+
+% Stdfig -> Used as \stdfig{label_name}{caption}
+% Requires: image called 'caption' in img folder.
+% Output: A figure with horizontal size the same as the document,
+%         labeled as 'fig:label_name'
+
+\newcommand{\stdfig}[2]{
+    \begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{img/#1.eps}
+    \caption{#2}
+    \label{fig:#1}
+    \end{figure}
+}
+
+
+\begin{document} 
+
+
+
+%% Front page.
+\title{Clustering}
+
+    
+    \date{}
+    
+
+    
+
+    \maketitle
+
+\newpage
+%% Abstract page.
+
+
+%% Table of contents page.
+
+
+
+%% Body start.
+\section{Unsupervised Learning:
+Introduction}\label{unsupervised-learning-introduction}
+
+Clustering will be our first unsupervised algorithm.
+
+In clustering, we will no longer have labels for the data. We will make
+the algorithm find some structure in the data, clusters.
+
+Applications:
+
+\begin{itemize}
+\itemsep1pt\parskip0pt\parsep0pt
+\item
+  Market segmentation.
+\item
+  Social network analysis.
+\item
+  Organize computing clusters.
+\item
+  Astronomical data analysis.
+\end{itemize}
+
+\section{K-Means Algorithm}\label{k-means-algorithm}
+
+Iterative algorithm for grouping data in clusters:
+
+Input = number of clusters and unlabeled training set.
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\itemsep1pt\parskip0pt\parsep0pt
+\item
+  Randomly initialize cluster centroids.
+\item
+  Assign each data point to its closest centroid.
+\item
+  Move each centroid to the mean of the points assigned to them.
+\item
+  Iterate 2 and 3 until no major change in step 3 happens.
+\end{enumerate}
+
+A more formal description is given in \cref{alg:kmeans}:
+
+\begin{algorithm}
+\caption{Kmeans algorithm}\label{alg:kmeans}
+\begin{algorithmic}[1]
+\Function{Kmeans}{$K, x$} \Comment{K = number of clusters, x = unlabeled dataset}
+    \State Randomly initialize $K$ cluster centroids $\mu_1, \mu_2, ... , \mu_K \in \mathbb{R}$.
+    \While{not convergence}
+        \For{$i$ = 1 to $m$} \Comment{m is the length of the dataset}
+            \State $c^{(i)} \gets$ index of cluster centroid closest to $x^{(i)}$
+        \EndFor 
+        \For{$k$ = 1 to $K$} 
+            \State $\mu_k \gets$ average (mean) of points assigned to cluster $k$
+        \EndFor
+    \EndWhile
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+To find out which cluster is the closest one, we can use any distance
+(such as the euclidian one).
+
+Convergence is declared once there is no change between two consecutive
+runs.
+
+If a cluster ends with no points assigned to it, simply eliminate it or
+reinitialize it randomly if the amount of clusters can't be diminished
+at all.
+
+\section{Optimization Objective}\label{optimization-objective}
+
+The algorithms we've seen all have a cost function to optimize. Turns
+out, Kmeans also has a cost function. Let's remember some of the kmean
+notation first:
+
+\begin{itemize}
+\itemsep1pt\parskip0pt\parsep0pt
+\item
+  $c^{(i)} = \text{index of cluster to which example} x^{(i)} \text{is currently assigned}$
+\item
+  $\mu_k = \text{cluster centroid } k (\mu_k \in \mathbb{R}^n)$
+\item
+  $\mu_c(i) = \text{cluster centroid of cluster to which example } x^{(i)} \text{ has been assigned}$
+\end{itemize}
+
+Given that, we can now see that kmeans is minimizing
+\cref{eq:kmeans_cost_function}
+
+\begin{equation} \label{eq:kmeans_cost_function}
+J(c^{(1)}, \dots, c^{(m)}, \mu_1, \dots, \mu_K) = \frac{1}{m} \sum_{i=1}^{m} \norm{x^{(i)} - \mu_c(i)}^2
+\end{equation}
+
+\cref{eq:kmeans_cost_function} is sometimes called the distortion
+formula.
+
+\section{Random Initialization}\label{random-initialization}
+
+We need to make sure that the kmeans algorithm evades local optimal.
+Some things that help with that are:
+
+\begin{itemize}
+\itemsep1pt\parskip0pt\parsep0pt
+\item
+  $K < m$: number of clusters \textless{} number of data points.
+\item
+  Randomly choosing $K$ training examples instead of choosing freely
+  random points for cluster initialization.
+\end{itemize}
+
+Even using that, it might end up in a local optima. We can initialize
+kmeans several times to solve that as shown in
+\cref{alg:kmeans_no_local_optima}.
+
+\begin{algorithm}
+\caption{Kmeans solving local optima problem}\label{alg:kmeans_no_local_optima}
+\begin{algorithmic}[1]
+\Function{Kmeans}{$K, x, repetitions$} \Comment{K = number of clusters, x = unlabeled dataset}
+    \For{$i$ = 1 to repetitions}
+        \State Run normal K-means.
+    \EndFor
+    \State \Return the instance that gets the lowest cost function.
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\section{Choosing the number of
+clusters}\label{choosing-the-number-of-clusters}
+
+The most common thing to do is to explore that data in order to know the
+optimum amount of clusters. \smallskip
+
+A method sometimes used is called Elbow number
+(\cref{fig:elbow_method}), in which you pick the point in which the cost
+function no longer decreases very fast. This can only be applied in
+certain cases in which that value is very clear, which might not be
+always as shown in the right graph of \cref{fig:elbow_method}. \bigskip
+
+\stdfig{elbow_method}{Graphs indicating when to use the elbow method to select the optimal amount of clusters.}
+
+Sometimes Kmeans is used to get clusters to use for some later purpose.
+We might exploit that to select the amount of clusters so that it
+performs well for that purpose.
+
+For example, if we are clustering t-shirts sizes, to find out the amount
+of t-shirt sizes we have to produce, as seen in
+\cref{fig:t_shirt_clustering}. We can think about it from the t-shirt
+business point of view, and we might conclude that having less t-shirt
+sizes might be cheaper, so we would prefer an small amount of clusters.
+
+\stdfig{t_shirt_clustering}{Graphs showing different cluster amounts for the t-shirt industry.}
+
+
+%% Body end.
+
+%% Bibliography.
+
+    \nocite{*}
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}
