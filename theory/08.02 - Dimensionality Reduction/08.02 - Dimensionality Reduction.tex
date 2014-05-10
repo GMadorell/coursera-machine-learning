@@ -1,0 +1,209 @@
+
+\RequirePackage[l2tabu, orthodox]{nag} % Complaints if syntax isn't right.
+\documentclass[10pt]{extarticle}
+
+\usepackage[utf8]{inputenc}
+\usepackage{extsizes} % Allow for more sizes such as 14pt or 17pt on document class.
+\usepackage{mathtools} % Allows conditional math expressions, etc.
+\usepackage{amsfonts} % Allows \mathbb{R}, which is the real numbers symbol.
+\usepackage[export]{adjustbox} % Wrapd \includegraphics with more keys (options).
+
+% For writing pseudocode snippets: http://ctan.mackichan.com/macros/latex/contrib/algorithmicx/algorithmicx.pdf
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+% Layout the document: http://texdoc.net/texmf-dist/doc/latex/geometry/geometry.pdf
+\usepackage[top=3.5cm, bottom=3.5cm, left=3.5cm, right=3.5cm]{geometry}
+
+\usepackage{microtype} % Makes document more readable by optimizing space between letters.
+
+\usepackage{units} % Adds \nicefrac{1}{2}: (½), \unit[5]{m}{s}: 5 m/s.
+
+\usepackage[colorlinks=false, pdfborder={0 0 0}]{hyperref} % Allow clicking references and the table of contents in pdfs.
+\usepackage{cleveref} % Adds fig/formula etc. before references (use \cref).
+
+%%% New commands.
+
+% Don't output references in case they're empty - http://tex.stackexchange.com/questions/74476/how-to-avoid-empty-thebibliography-environment-bibtex-if-there-are-no-refere
+
+\let\myBib\thebibliography
+\let\endmyBib\endthebibliography
+
+\renewcommand\thebibliography[1]{\ifx\relax#1\relax\else\myBib{#1}\fi}
+
+
+% Norm -> ||something||
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+
+% Stdfig -> Used as \stdfig{label_name}{caption}
+% Requires: image called 'caption' in img folder.
+% Output: A figure with horizontal size the same as the document,
+%         labeled as 'fig:label_name'
+
+\newcommand{\stdfig}[2]{
+    \begin{figure}
+    \centering
+    \includegraphics[max size={\textwidth}{\textheight}]{img/#1.eps}
+    \caption{#2}
+    \label{fig:#1}
+    \end{figure}
+}
+
+
+\begin{document} 
+
+
+
+%% Front page.
+\title{Dimensionality Reduction}
+
+    
+    \date{}
+    
+
+    
+
+    \maketitle
+
+\newpage
+%% Abstract page.
+
+
+%% Table of contents page.
+
+
+
+%% Body start.
+\section{Motivation I: Data
+Compression}\label{motivation-i-data-compression}
+
+Dimensionality reduction means transforming from a given amount of
+features to a smaller amount of them (for example: 2D -\textgreater{}
+1D). This is useful when we have redunant features (such as inches and
+cm) that we can delete and have the same performance but being faster.
+
+\section{Motivation II: Data
+Visualization}\label{motivation-ii-data-visualization}
+
+As we can only visualize data that has three or less dimensions, we can
+use dimensionality reduction in order to visualize datasets that have
+\textgreater{}3 dimensions. The hard part is how to select which
+features represent the data better.
+
+\section{Principal Component Analysis Problem
+Formulation}\label{principal-component-analysis-problem-formulation}
+
+\begin{itemize}
+\itemsep1pt\parskip0pt\parsep0pt
+\item
+  Needs feature scaling before being applied.
+\item
+  PCA tries to minimize the projection error.
+\end{itemize}
+
+Problem: Reduce from 2D to 1D: Find a direction onto which to project
+the data so as to minimize the projection error. \smallskip
+
+If we have more dimensions than that, we will find n vectors (where n is
+the amount of dimensions we want to end with) indicating the directions
+into which to project the data, minimizing the projection error.
+\smallskip
+
+Basically, PCA is trying to find a lower dimensional surface onto which
+to project the data so as to minimize the squared projection error
+(squared distance between each point and the location in which it gets
+projected).
+
+\subsection{PCA is not lineal
+regression}\label{pca-is-not-lineal-regression}
+
+Linear regression fits a line according to the predictions of the
+hypothesis (minimizes mse between data and the hyphotesis), whereas PCA
+minimizes the squared error directly onto the projection vector.
+
+\section{PCA Algorithm}\label{pca-algorithm}
+
+Remember to preprocess the data normalizing it before applying PCA!
+\smallskip
+
+En example of PCA from 2D to 1D can be seen in \cref{fig:pca_2d_to_1d}.
+We need to know how to calculate the vector $u^{(1)}$ and all $z^{(i)}$.
+\smallskip
+
+\stdfig{pca_2d_to_1d}{Example of PCA from 2D to 1D}
+
+The algorithm for finding out principal components can be found in
+\cref{alg:pca}.
+
+\begin{algorithm}
+\caption{PCA algorithm}\label{alg:pca}
+\begin{algorithmic}[1]
+\Function{PCA}{$x, k$} \Comment{x = unlabeled dataset}
+    \State Reduces data from $n$-dimensions to $k$-dimensions.
+    \State Compute covariance matrix:
+        \State \indent $\Sigma = \frac{1}{m} \sum_{(i=1)}^n (x^{(i)})(x^{(i)})^T$
+    \State Compute "eigenvectors" of matrix $\Sigma$:
+        \State \indent [$U, S, V$] = svd(Sigma);  \Comment{Singular Value Decomposition}
+        \State \indent We only need $U$. $k$-first $U$ vectors are the ones that we will use to describe the data.
+        \State \indent $U_{\text{reduce}} \gets \text{First} \, k \, \text{vectors from} \, U \, \text{(in columns)}$
+    \State $z \gets U_{\text{reduce}}^T x$
+    \State \Return $z$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\section{Choosing the number of principal
+components}\label{choosing-the-number-of-principal-components}
+
+Typically, we choose $k$ to be the smallest value that still retains the
+99\% of the variance. That is the same as: \[
+\frac{\text{average squared projection error}}{\text{total variation in the data}} = \frac{\frac{1}{m} \sum_{i=1}^m \norm{x^{(i)} - x_\text{approx}^{(i)}}^2}{\frac{1}{m} \sum_{i=1}^m \norm{x^{(i)}}^2} \leq 0.01 \, (1\%)
+\]
+
+Then, we can select $k$ iteratively, starting from one and trying every
+single value until we retain 99\% of the variance, at which point we can
+select the $k$ that satisfies that restriction. \smallskip
+
+Above solution is very slow though. We can take advantage that we are
+computing the ``svd''. We can use the $S$ matrix returned by it to
+calculate the retained variance in a much more easy way:
+
+\[
+\text{For a given} \, k:
+\frac{\text{average squared projection error}}{\text{total variation in the data}} = 1 - \frac{\sum_{(i=1)}^k Sii}{\sum_{(i=1)}^n Sii}
+\]
+
+Using above formula, we can simply calculate the svd once and iterate
+with the $S$ matrix until we find the correct $k$.
+
+\section{Deconstruction from Compressed
+Representation}\label{deconstruction-from-compressed-representation}
+
+We're going to see how to reconstruct the data after having applied PCA
+to it. It's a lossy method, so we're not going to get the same exact
+data, just an approximation of it.
+
+\[
+X_\text{approx} = U_\text{reduce} z
+\]
+
+\section{Advice for Appylying PCA}\label{advice-for-appylying-pca}
+
+We can use PCA in a supervised machine learning problem (using only $X$)
+to speed up the algorithm. Just remember to also use the PCA with the
+predict data! \smallskip
+
+The PCA mapping should be defined using only the training set, as we
+could bias it running it with the cv/test dataset as well.
+
+
+%% Body end.
+
+%% Bibliography.
+
+    \nocite{*}
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}
