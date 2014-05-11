@@ -31,11 +31,6 @@ for centroid = 1:K
     centroids(centroid, :) = mean(X(idx == centroid, :));
 end
 
-disp(centroids);
-
-
-
-
 
 % =============================================================
 
