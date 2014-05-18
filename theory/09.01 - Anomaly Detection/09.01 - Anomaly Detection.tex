@@ -1,0 +1,239 @@
+
+\RequirePackage[l2tabu, orthodox]{nag} % Complaints if syntax isn't right.
+\documentclass[10pt]{extarticle}
+
+\usepackage[utf8]{inputenc}
+\usepackage{extsizes} % Allow for more sizes such as 14pt or 17pt on document class.
+\usepackage{mathtools} % Allows conditional math expressions, etc.
+\usepackage{amsfonts} % Allows \mathbb{R}, which is the real numbers symbol.
+\usepackage[export]{adjustbox} % Wraps \includegraphics with more keys (options).
+
+
+% For writing pseudocode snippets: http://ctan.mackichan.com/macros/latex/contrib/algorithmicx/algorithmicx.pdf
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+
+
+
+\usepackage[top=3.5cm, bottom=3.5cm, left=3.5cm, right=3.5cm]{geometry}
+
+\usepackage{microtype} % Makes document more readable by optimizing space between letters.
+
+\usepackage{units} % Adds \nicefrac{1}{2}: (½), \unit[5]{m}{s}: 5 m/s.
+
+\usepackage[colorlinks=false, pdfborder={0 0 0}]{hyperref} % Allow clicking references and the table of contents in pdfs.
+\usepackage{cleveref} % Adds fig/formula etc. before references (use \cref).
+
+%%% New commands.
+
+% Don't output references in case they're empty - http://tex.stackexchange.com/questions/74476/how-to-avoid-empty-thebibliography-environment-bibtex-if-there-are-no-refere
+
+\let\myBib\thebibliography
+\let\endmyBib\endthebibliography
+
+\renewcommand\thebibliography[1]{\ifx\relax#1\relax\else\myBib{#1}\fi}
+
+
+% Norm -> ||something||
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+
+% Stdfig -> Used as \stdfig{width}{label_name}{caption}
+% Requires: image called 'caption' in img folder.
+% Output: A figure with the given width, labeled as 'fig:label_name'
+
+\newcommand{\stdfig}[3]{
+    \begin{figure}
+    \centering
+    \includegraphics[width = #1]{img/#2.eps}
+    \caption{#3}
+    \label{fig:#2}
+    \end{figure}
+}
+
+
+
+\begin{document} 
+
+
+
+%% Front page.
+\title{09.01 - Anomaly Detection}
+
+    
+    \date{}
+    
+
+    
+
+    \maketitle
+
+\newpage
+%% Abstract page.
+
+
+%% Table of contents page.
+
+
+
+%% Body start.
+\section{Problem Motivation}\label{problem-motivation}
+
+Example:\\Say that we have some aircraft engine features:
+
+\begin{itemize}
+\itemsep1pt\parskip0pt\parsep0pt
+\item
+  $x_1$ = heat generated
+\item
+  $x_2$ = vibration intensity
+\end{itemize}
+
+In this type of problem, we want to know if a new engine is ``wrong'',
+meaning that it might not function properly and we need to further test
+it.
+
+As we can see in \cref{fig:aircraft_engines}, if the new engine is
+inside of the ``normal'' motors, then we assume it's also normal. On the
+other hand, if the engine falls in a region that is outside of the
+normal one, we consider it as being ``wrong''. The exact problem, then,
+is defining what is this normal region and how to decided whether a
+given point is inside it or not. \bigskip
+
+\stdfig{8cm}{aircraft_engines}{Anomaly detection in aircraft engines}
+
+More formally, we're given a dataset
+$\{x^{(1)}, x^{(2)}, \dots, x^{(m)}\}$ of normal data points and we need
+to decide whether $x_{test}$ is anomalous.
+
+We use probability models that estimate $P(x_{test} = \text{normal})$.
+
+\section{Gaussian Distribution}\label{gaussian-distribution}
+
+We say that $x \sim \mathcal{N}(\mu, \sigma^2)$ (x is distributed as
+Normal), with mean $\mu$ and variance $\sigma^2$ if:
+
+\[ p(x;\mu,\sigma^2) = \frac{1}{\sqrt{2\pi}\sigma} \exp(- \frac{(x - \mu)^2}{2\sigma^2}) \]
+
+Which can be modelled as a bell curve, as seen in
+\cref{fig:normal_distribution}. In simple terms, $\mu$ is where the
+center of the curve is and $\sigma^2$ is how wide the curve is.
+
+\stdfig{8cm}{normal_distribution}{Normal distribution}
+
+\section{Algorithm}\label{algorithm}
+
+Training set: $\{x^{(1)}, x^{(2)}, \dots, x^{(m)}\}$.\\Each example is
+$x \in \mathbb{R}^n$.
+
+We're going to model the probabilities as such:
+
+\[ p(x) = p(x_1;\mu_1,\sigma_1^2) \, p(x_2;\mu_2,\sigma_2^2) \dots p(x_n;\mu_n,\sigma_n^2) = \prod_{j=1}^n p(x_j; \mu_j, \sigma_j^2) \]
+
+Which is basically to estimate each feature as a normal distribution and
+join them together. This formula assumes independent features, but it
+works well even though the assumption might be wrong.
+
+Putting it all together, we have \cref{alg:anomaly_detection_normals}.
+
+\begin{algorithm}
+\caption{Anomaly detection algorithm using gaussians} \label{alg:anomaly_detection_normals}
+\begin{algorithmic}[1]
+\State Choose features $x_i$ that might be indicative of anomalous examples.
+\State Fit parameters $\mu_1, \dots, \mu_n$, $\sigma_1^2, \dots, \sigma^2_n$.
+\State \indent $\mu_j = \frac{1}{m}\sum_{i=1}^m x_j^{(i)}$
+\State \indent $\sigma^2_j = \frac{1}{m}\sum_{i=1}^m (x_j^{(i)} - \mu_j)^2$ 
+\State Given a new example $x$, compute:
+\State \indent $p(x) = \prod_{j=1}^n p(x_j; \mu_j, \sigma_j^2) = \prod_{j=1}^n \frac{1}{\sqrt{2\pi}\sigma} \exp(- \frac{(x_j - \mu_j)^2}{2\sigma_j^2}) $
+\State Anomaly if $p(x) < \epsilon$
+\end{algorithmic}
+\end{algorithm}
+
+\section{Developing and Evaluating and Anomaly Detection
+System}\label{developing-and-evaluating-and-anomaly-detection-system}
+
+When developing a learning algorithm making decisions is much easier if
+we have a way of evaluating our learning algorithm. \smallskip
+
+To evaluate our anomaly detection system we need some labeled data, of
+anomalous and non-anomalous examples.
+
+We still train with only normal/non-anomalous examples. The cv set and
+the test set contain anomalous data points as well as non-anomalous.
+Then we just fit the model and evaluate it as normal supervised problem
+(f1-score, recall, etc.). We can also use cross validation set to choose
+the threshold $\epsilon$.
+
+\section{Anomaly Detection vs.~Supervised
+Learning}\label{anomaly-detection-vs.supervised-learning}
+
+If we have labeled data, why don't we just use a supervised learning
+straight away? One of the reasons is that anomaly detection works better
+with very small anomalies (positive examples) whereas supervised
+learning works better when we have a large number of positive and
+negative examples.
+
+Also, anomaly detection works better when we have many differet types of
+anomalies, so that supervised learning doesn't learn from positive
+examples what the anomalies look like. Future anomalies might look
+nothing like any of the anomalous examples we've seen so far.
+
+\section{Choosing What Features to
+Use}\label{choosing-what-features-to-use}
+
+Before running algorithm plot histogram of the data. If the result is a
+non gaussian plot, try to transform it (use log(x), log(x+constant),
+$x^c$, etc..) and, if after transforming it it looks gausian, substitute
+the whole feature for its transformation. \bigskip
+
+A good way to get new features is to look at anamolous examples
+missclassified manually to search what differences they have compared to
+the normal examples. \bigskip
+
+Another good idea is to choose features that might take on unusually
+large or small values in the event of an anormally.
+
+\section{Multivariate Gaussian
+Distribution}\label{multivariate-gaussian-distribution}
+
+Problem of the anterior algorithm is that it does not take into account
+the other features. It evaluates every feature differently.
+
+This algorithm, on the other hand, doesn't model $p(x_1), p(x_2) \dots $
+separetly, it models $p(x)$ in one go. This means that, to model a
+feature, it uses inormation from the rest, so it might work better.
+Parameters: $\mu \in \mathbb{R}^n, \Sigma \in \mathbb{R}^{n \times n}$
+(covariance matrix).
+
+\[ p(x;\mu,\Sigma) = \frac{1}{(2\pi)^{\nicefrac{n}{2}} | \Sigma | ^{\nicefrac{1}{2}}} \exp(-\frac{1}{2} (x-\mu)^T \Sigma^{-1} (x-\mu)) \]
+
+\section{Anomaly Detection using the Multivariate Gaussian
+Distribution}\label{anomaly-detection-using-the-multivariate-gaussian-distribution}
+
+Parameter fitting:
+
+\[ \mu = \frac{1}{m} \sum_{i=1}^m x^{(i)} \]
+\[ \Sigma = \frac{1}{m} \sum_{i=1}^m (x^{(i)} - \mu)(x^{(i)} - \mu)^T\]
+
+After we have done this, we do the same as the normal anomaly detection
+algorithm but we calculate $p(x)$ with the new formula. \bigskip
+
+This new model captures correlations between features automatically.
+It's also computationally more expensive. Furthermore, it needs $m > n$
+(more samples than features), otherwise $\Sigma$ is non-invertible.
+
+
+%% Body end.
+
+%% Bibliography.
+
+\clearpage
+
+
+
+    \nocite{*}
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}

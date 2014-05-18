@@ -1,0 +1,298 @@
+
+\RequirePackage[l2tabu, orthodox]{nag} % Complaints if syntax isn't right.
+\documentclass[10pt]{extarticle}
+
+\usepackage[utf8]{inputenc}
+\usepackage{extsizes} % Allow for more sizes such as 14pt or 17pt on document class.
+\usepackage{mathtools} % Allows conditional math expressions, etc.
+\usepackage{amsfonts} % Allows \mathbb{R}, which is the real numbers symbol.
+\usepackage[export]{adjustbox} % Wraps \includegraphics with more keys (options).
+
+
+% For writing pseudocode snippets: http://ctan.mackichan.com/macros/latex/contrib/algorithmicx/algorithmicx.pdf
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+
+
+
+\usepackage[top=3.5cm, bottom=3.5cm, left=3.5cm, right=3.5cm]{geometry}
+
+\usepackage{microtype} % Makes document more readable by optimizing space between letters.
+
+\usepackage{units} % Adds \nicefrac{1}{2}: (½), \unit[5]{m}{s}: 5 m/s.
+
+\usepackage[colorlinks=false, pdfborder={0 0 0}]{hyperref} % Allow clicking references and the table of contents in pdfs.
+\usepackage{cleveref} % Adds fig/formula etc. before references (use \cref).
+
+%%% New commands.
+
+% Don't output references in case they're empty - http://tex.stackexchange.com/questions/74476/how-to-avoid-empty-thebibliography-environment-bibtex-if-there-are-no-refere
+
+\let\myBib\thebibliography
+\let\endmyBib\endthebibliography
+
+\renewcommand\thebibliography[1]{\ifx\relax#1\relax\else\myBib{#1}\fi}
+
+
+% Norm -> ||something||
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+
+% Stdfig -> Used as \stdfig{width}{label_name}{caption}
+% Requires: image called 'caption' in img folder.
+% Output: A figure with the given width, labeled as 'fig:label_name'
+
+\newcommand{\stdfig}[3]{
+    \begin{figure}
+    \centering
+    \includegraphics[width = #1]{img/#2.eps}
+    \caption{#3}
+    \label{fig:#2}
+    \end{figure}
+}
+
+
+
+\begin{document} 
+
+
+
+%% Front page.
+\title{09.02 - Recommender Systems}
+
+    
+    \date{}
+    
+
+    
+
+    \maketitle
+
+\newpage
+%% Abstract page.
+
+
+%% Table of contents page.
+
+
+
+%% Body start.
+\section{Problem Formulation}\label{problem-formulation}
+
+Example: Predicting movie ratings.
+
+Imagine a company where users rate movies using zero to five stars.
+
+Notation:
+
+\begin{itemize}
+\itemsep1pt\parskip0pt\parsep0pt
+\item
+  $n_u$ = number of users
+\item
+  $n_m$ = number of movies
+\item
+  $r(i, j)$ = 1 if user $j$ has rated movie $i$
+\item
+  $y^{(i,j)}$ = rating given by user $j$ to movie $i$ (defined only if
+  $r(i, j)$ = 1)
+\end{itemize}
+
+The problem is: given this dataset, to look through all the missing
+ratings on the dataset and fill them (\cref{fig:movie_ratings_table}).
+
+\stdfig{9cm}{movie_ratings_table}{Movie ratings table}
+
+\section{Content Based
+Recommendations}\label{content-based-recommendations}
+
+How do we predict the ``?'' in the movies table
+(\cref{fig:movie_ratings_table})?
+
+Let's guess that we have two additional features in the table: one that
+measures the amount of romance a movie has and another one that measures
+the amount of action (\cref{fig:movie_ratings_table_with_features}).
+
+\stdfig{11cm}{movie_ratings_table_with_features}{Movie ratings table with features}
+
+If we then add the interceptor term $x_0 = 1$, we have a feature vector
+for each movie ($x^{(1)} = [1, \, 0.9, \,  0]^T$, for example). \bigskip
+
+The idea is to use linear regression for each different user and predict
+the missing parameters with that. More formally: for each user $j$,
+learn a parameter $\theta^{(j)} \in \mathbb{R}^3$. Predict user $j$ as
+rating movie $i$ with $(\theta^{(j)})^Tx^{(i)}$ stars. \smallskip
+
+For example, in \cref{fig:movie_ratings_table_with_features}, if we
+wanted to predict ``Cute pupies of love'' for ``Alice'', and we already
+got $\theta$, we would do: $(\theta^{(1)})^Tx^{(3)}$. \smallskip
+
+\subsection{Optimization Objective}\label{optimization-objective}
+
+We can describe this intention (learn $\theta$ for the user $j$) with
+the formula:
+
+\[ \min_{\theta^{(j)}}  \frac{1}{2} \sum_{i:r(i, j)=1} ((\theta^{(j)})^Tx^{(i)} - y^{(i,j)})^2 + \frac{\lambda}{2} \sum_{k=1}^n(\theta_k^{(j)})^2 \]
+
+Where $\sum_{i:r(i, j)=1} $ is a for loop with all the rated movies by
+that user. \smallskip
+
+To learn all the $\theta$, we can do:
+
+\[ \min_{\theta^{(1)}, \dots, \theta^{(n_u)}}  \frac{1}{2} \sum_{j=1}^{n_u} \sum_{i:r(i, j)=1} ((\theta^{(j)})^Tx^{(i)} - y^{(i,j)})^2 + \frac{\lambda}{2} \sum_{j=1}^{n_u} \sum_{k=1}^n(\theta_k^{(j)})^2 \]
+
+Which is very, very similar to the standard linear regression equation
+(only filtering the unknows votes out).
+
+\subsubsection{Gradient descent update}\label{gradient-descent-update}
+
+\[ \theta_k^{(j)} := \theta_k^{(j)} - \alpha \sum_{i:r(i, j)=1} \left( (\theta^{(j)})^Tx^{(i)} - y^{(i,j)}\right) x_k^{(i)} \,\, \text{(for $k$ = 0)} \]
+
+\[ \theta_k^{(j)} := \theta_k^{(j)} - \alpha \left( \sum_{i:r(i, j)=1} \left( (\theta^{(j)})^Tx^{(i)} - y^{(i,j)}\right) x_k^{(i)} + \lambda\theta_k^{(j)} \right) \,\, \text{(for $k \neq$ 0)} \]
+
+\section{Collaborative Filtering}\label{collaborative-filtering}
+
+This algorithm has the characteristic of learning the features it needs
+by himself. \smallskip
+
+In the last example (\cref{fig:movie_ratings_table_with_features}) we
+had some features. Extracting those features is quite time consuming,
+though. \smallskip
+
+In this new algorithm, we won't have the features
+(\cref{fig:movie_ratings_table_unknown_features}). Let's imagine that
+the users tells us whether they like romance and action movies (the
+$\theta$). Then, it's possible to infer the values of $x_1$ and $x_2$.
+\smallskip 
+
+\stdfig{12cm}{movie_ratings_table_unknown_features}{Move ratings with unknown features}
+
+We can exploit that we know the ratings of the users and their
+preferences to know which value to assign to each movie feature. For
+example, if a user says that he likes action movies and he rates a movie
+very high, we can assume that that movie will have action.
+
+\subsection{Optimization Algorithm}\label{optimization-algorithm}
+
+Given $\theta^{(1)}, \dots, \theta^{(n_u)}$, to learn $x^{(i)}$:
+
+\[ \min_{x^{(i)}}  \frac{1}{2} \sum_{i:r(i, j)=1} ((\theta^{(j)})^Tx^{(i)} - y^{(i,j)})^2 + \frac{\lambda}{2} \sum_{k=1}^n(x_k^{(i)})^2 \]
+
+Which reads as: choosing the features so that the predicted value will
+be similar to the actual value that we observe on the rating of the
+users. \smallskip
+
+We can then compute this for all the movies. Given
+$\theta^{(1)}, \dots, \theta^{(n_u)}$, to learn
+$x^{(1)}, \dots, x^{(n_m)}$:
+
+\[ \min_{x^{(1)}, \dots, x^{(n_m)}}  \frac{1}{2} \sum_{i=1}^{n_m} \sum_{j:r(i, j)=1} ((\theta^{(j)})^Tx^{(i)} - y^{(i,j)})^2 + \frac{\lambda}{2} \sum_{i=1}^{n_m} \sum_{k=1}^n(x_k^{(i)})^2 \]
+
+\subsubsection{Gradient descend update}\label{gradient-descend-update}
+
+\[ x_k^{(i)} := x_k^{(i)} - \alpha \sum_{j:r(i, j)=1} \left( (\theta^{(j)})^Tx^{(i)} - y^{(i,j)}\right) \theta_k^{(j)} \,\, \text{(for $k$ = 0)} \]
+
+\[ x_k^{(i)} := x_k^{(i)} - \alpha \left( \sum_{j:r(i, j)=1} \left( (\theta^{(j)})^Tx^{(i)} - y^{(i,j)}\right) \theta_k^{(j)} + \lambda x_k^{(i)} \right) \,\, \text{(for $k \neq$ 0)} \]
+
+\subsection{How to continue}\label{how-to-continue}
+
+We've seen in content based filtering that given
+$x^{(1)}, \dots, x^{(n_m)}$ we can estimate
+$\theta^{(1)}, \dots, \theta^{(n_u)}$. \smallskip
+
+In collaborative filtering, given $\theta^{(1)}, \dots, \theta^{(n_u)}$,
+we can estimate $x^{(1)}, \dots, x^{(n_m)}$. \bigskip
+
+So, this is the egg-chicken problem. What we can do, therefore, is
+randomly guess $\theta$ to learn $x$ (features). We can then use the $x$
+to learn $\theta$, etc.
+
+\section{Collaborative Filtering
+Algorithm}\label{collaborative-filtering-algorithm}
+
+We've talked about the ideas of how if you're given features for movies,
+we can learn parameters $\theta$ for users. We've also seen how if we're
+given parameters for the users we can use that to extract features for
+the movies. We'll now find an algorithm to solve that problem. \bigskip
+
+We could to the chicken-egg back and forth optimization algorithm, but
+there is an algorithm that optimizes both $x$ and $\theta$ at the same
+time, so it's better. \smallskip
+
+The cost function is:
+
+\[ J(x^{(1)}, \dots, x^{(n_m)}, \theta^{(1)}, \dots, \theta^{(n_u)}) = \frac{1}{2} \sum_{(i,j):r(i, j)=1} \left( (\theta^{(j)})^Tx^{(i)} - y^{(i,j)}\right)^2 + \frac{\lambda}{2} \sum_{i=1}^{n_m} \sum_{k=1}^n(x_k^{(i)})^2  + \frac{\lambda}{2} \sum_{j=1}^{n_u} \sum_{k=1}^n(\theta_k^{(j)})^2\]
+
+Which is basically merging both cost functions (collaborative and
+content based filtering) into one, taking advantage that the less
+squares sumation is the same in both and then adding the respective
+regularization term.
+
+We also suppress the interceptor term $x_1 = 1$, as the algorithm will
+learn it by himself if it's really needed.
+
+\subsection{Gradient descent}\label{gradient-descent}
+
+The same as before for the $\theta$ and $x$ respectively.
+
+\subsection{Detailed algorithm}\label{detailed-algorithm}
+
+We can find a more detailed explanation in
+\cref{alg:collaborative_filtering}.
+
+\begin{algorithm}
+\caption{Collaborative filtering algorithm} \label{alg:collaborative_filtering}
+\begin{algorithmic}[1]
+\State Initialize $x^{(1)}, \dots, x^{(n_m)}, \theta^{(1)}, \dots, \theta^{(n_u)}$ to small random values.
+\State Minimize $J(x^{(1)}, \dots, x^{(n_m)}, \theta^{(1)}, \dots, \theta^{(n_u)})$ using gradient descent (or an advanced optimization algorithm).
+
+For every $j = 1, \dots, n_u, i = 1, \dots, n_m$:
+
+$ x_k^{(i)} := x_k^{(i)} - \alpha \left( \sum_{j:r(i, j)=1} \left( (\theta^{(j)})^Tx^{(i)} - y^{(i,j)}\right) \theta_k^{(j)} + \lambda x_k^{(i)} \right) $
+
+$ \theta_k^{(j)} := \theta_k^{(j)} - \alpha \left( \sum_{i:r(i, j)=1} \left( (\theta^{(j)})^Tx^{(i)} - y^{(i,j)}\right) x_k^{(i)} + \lambda\theta_k^{(j)} \right) $
+
+\State For a user with parameters $\theta$ and a movie with (learned) features $x$, predict a star rating of $\theta^Tx$.
+
+\end{algorithmic}
+\end{algorithm}
+
+\section{Vectorization: Low Rank Matrix
+Factorization}\label{vectorization-low-rank-matrix-factorization}
+
+We'll see an alternative algorithm for solving the collaborative
+filtering problem. \bigskip
+
+Take the dataset we have (\cref{fig:movie_ratings_table}), and put it
+directly onto a matrix called $Y$. Then, we can stack the $x$ vectors
+and the $\theta$ vectors in two matrices, $X$ and $\Theta$. Afterwards,
+we can compute the prediction of the ratings simply by doing
+$X\Theta^T$. All this can be seen in
+\cref{fig:low_rank_matrix_factorization}
+
+\stdfig{10cm}{low_rank_matrix_factorization}{Low rank matrix factorization}
+
+\subsection{Finding related movies}\label{finding-related-movies}
+
+For each product $i$, we learn a feature vector
+$x^{(i)} \in \mathbb{R}^n$.
+
+How to find 5 movies $j$ most related to movie $i$?
+
+Find the 5 movies $j$ with the smallest $\norm{x^{(i)} - x^{(j)}}$.
+
+
+%% Body end.
+
+%% Bibliography.
+
+\clearpage
+
+
+
+    \nocite{*}
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}
