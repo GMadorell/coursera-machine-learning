@@ -1,0 +1,244 @@
+
+\RequirePackage[l2tabu, orthodox]{nag} % Complaints if syntax isn't right.
+\documentclass[10pt]{extarticle}
+
+\usepackage[utf8]{inputenc}
+\usepackage{extsizes} % Allow for more sizes such as 14pt or 17pt on document class.
+\usepackage{mathtools} % Allows conditional math expressions, etc.
+\usepackage{amsfonts} % Allows \mathbb{R}, which is the real numbers symbol.
+\usepackage[export]{adjustbox} % Wraps \includegraphics with more keys (options).
+
+
+
+
+
+\usepackage[top=3.5cm, bottom=3.5cm, left=3.5cm, right=3.5cm]{geometry}
+
+\usepackage{microtype} % Makes document more readable by optimizing space between letters.
+
+\usepackage{units} % Adds \nicefrac{1}{2}: (½), \unit[5]{m}{s}: 5 m/s.
+
+\usepackage[colorlinks=false, pdfborder={0 0 0}]{hyperref} % Allow clicking references and the table of contents in pdfs.
+\usepackage{cleveref} % Adds fig/formula etc. before references (use \cref).
+
+%%% New commands.
+
+% Don't output references in case they're empty - http://tex.stackexchange.com/questions/74476/how-to-avoid-empty-thebibliography-environment-bibtex-if-there-are-no-refere
+
+\let\myBib\thebibliography
+\let\endmyBib\endthebibliography
+
+\renewcommand\thebibliography[1]{\ifx\relax#1\relax\else\myBib{#1}\fi}
+
+
+% Norm -> ||something||
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+
+% Stdfig -> Used as \stdfig{width}{label_name}{caption}
+% Requires: image called 'caption' in img folder.
+% Output: A figure with the given width, labeled as 'fig:label_name'
+
+\newcommand{\stdfig}[3]{
+    \begin{figure}
+    \centering
+    \includegraphics[width = #1]{img/#2.eps}
+    \caption{#3}
+    \label{fig:#2}
+    \end{figure}
+}
+
+
+
+\begin{document} 
+
+
+
+%% Front page.
+\title{10.02 - Application Example: Photo OCR}
+
+    
+    \date{}
+    
+
+    
+
+    \maketitle
+
+\newpage
+%% Abstract page.
+
+
+%% Table of contents page.
+
+
+
+%% Body start.
+\section{Problem Description and
+Pipeline}\label{problem-description-and-pipeline}
+
+Photo OCR = Photo Optical Character Recognizion. This problem focuses on
+how to get computers to read text in pictures that we take.
+
+\subsection{Pipeline}\label{pipeline}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\itemsep1pt\parskip0pt\parsep0pt
+\item
+  Text detection - need to find where text is located in the photo.
+\item
+  Character segmentation - divide the photo rectangle into different
+  letters.
+\item
+  Character classification - see which letter is which.
+\end{enumerate}
+
+We can see the Machine Learning pipeline in
+\cref{fig:photo_ocr_pipeline}. One of the principal steps when building
+a ML system, it's very important to split the model into modules so
+different people can work on different things.
+
+\stdfig{12cm}{photo_ocr_pipeline}{Photo OCR pipeline}
+
+\section{Sliding Windows}\label{sliding-windows}
+
+\subsection{Text Detection}\label{text-detection}
+
+First step of the pipeline is \emph{text detection}. \smallskip
+
+We can first explain how to build a pedestrian detection system (easier)
+and then incorporate the ideas into the text detection module.
+
+What we do is take some standarized (same size) images where there are
+pedestrians and some where there are not
+(\cref{fig:pedestrian_detection_training_data}) and train with that.
+What we can do is then take that data and classify it as a supervised
+learning problem.
+
+When we are predicting from an image, we simply take a rectangle and
+shift it around the image, testing each time whether there is a
+pedestrian there or not, as seen in
+\cref{fig:pedestrian_sliding_window}. We start with a small window size,
+move it around the image and then try larger image patches (we do this
+by actually making the img smaller, not the window larger). \smallskip
+
+\stdfig{12cm}{pedestrian_detection_training_data}{Data used for pedestrian detection}
+
+\stdfig{10cm}{pedestrian_sliding_window}{Example of how to apply a sliding window when recognizing pedestrians}
+
+When doing text detection, we do a similar thing. We also use positive
+examples and negative examples (\cref{fig:text_detection_training_data})
+to build up a supervised learning environment.
+
+We then apply the classifier using the sliding window technique and
+collect the results. We then use computer vision techniques: use
+expansion on the collected results image. Afterwards, we take advantage
+of knowing that text boxes should have width much higher than height and
+discard those that don't satisfy this characteristic. We can then just
+place bounding boxes around the rectangles that are left, and finally
+cut those image regions. We can see an example of this process in
+\cref{fig:text_detection_visual_algorithm}.
+
+\stdfig{12cm}{text_detection_training_data}{Data used for text detection}
+
+\stdfig{12cm}{text_detection_visual_algorithm}{Text detection steps}
+
+\subsection{Character Segmentation}\label{character-segmentation}
+
+For separating the individual characters inside an image, we can use a
+similar technique than when we were doing text detection.
+
+We can just take positive and negative examples and train a classifier
+with that, as seen in \cref{fig:character_segmentation_training_data}.
+The only difference is that now we try to find whether there is a
+separation between two characters as the true label. After training the
+classifier, we use a 1D sliding window (only from left to right) and
+collect the results (which will be the splits), as we can see in
+\cref{fig:character_segmentation_sliding_window}.
+
+\stdfig{12cm}{character_segmentation_training_data}{Data used for training a character classifier}
+
+\stdfig{8cm}{character_segmentation_sliding_window}{Results of applying 1D sliding window for character segmentation}
+
+\subsection{Character Classification}\label{character-classification}
+
+The last step of the pipeline is just to use the previously done
+classification task so we know which letter corresponds to each of the
+split symbols.
+
+\section{Getting Lots of Data and Artificial
+Data}\label{getting-lots-of-data-and-artificial-data}
+
+\textbf{Artificial Data Synthesis} = either create data from scratch or
+amplify an already existing dataset. \smallskip
+
+For example, on the character recognition task, we can synthesize data
+to help us learn better. One way to create data from scratch would be to
+simply take existing fonts and throw them to a random background similar
+to the ones from real data. We can also rotate or blur them to make them
+more realistic. This is a very creative job, as we can see. An example
+to amplify the existing dataset is to introduce small distortions on the
+existing letter examples (\cref{fig:real_data_distortion}). \smallskip
+
+It usually does not help to add purely random/meaningless noise to the
+data. We need to only add noise that is expected on the test set.
+\smallskip
+
+If we had a speech recognition task we could add for example crowd on
+the background to the clean data examples.
+
+\stdfig{10cm}{real_data_distortion}{Synthesizing data via real data amplification using distortions}
+
+\subsection{Discussion on getting more
+data}\label{discussion-on-getting-more-data}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  Make sure you have a low bias classifier (plot learning curves to know
+  that). For example: keep increasing the number of features/number of
+  hidden units in neural network until you have a low bias classifier.
+  If we don't do this, getting more data isn't likely to help.
+\item
+  Ask yourself: ``How much work would it be to get 10x as much data as
+  we currently have?'' If the answer is reasonable, consider doing that.
+\item
+  Thing about crowd sourcing the data labeling process. Buy hours from
+  people, basically. Example: Amazon Mechanical Turk.
+\end{enumerate}
+
+\section{Ceiling Analysis: What Part of the Pipeline to Work on
+Next}\label{ceiling-analysis-what-part-of-the-pipeline-to-work-on-next}
+
+When developing on a ML system, one of the most valuable resources is
+the time of the developers. We need to know what to prioritize when
+working on a pipeline. \smallskip
+
+We will continue taking a look on the OCR pipeline
+(\cref{fig:photo_ocr_pipeline}). Where to alocate resources (time)? The
+first step is to get a number to evaluate the whole system (accuracy,
+recall, etc.). We can then evaluate every single module using the same
+score, using as test data manually selected ground truth. This is
+basically giving the correct answers to the algorithm, as if the other
+parts of the pipeline had a 100\% score. Doing this consecutively we
+might end up with the results seen in \cref{fig:ocr_initial_results}. In
+this example, we see that the part that needs more work is text
+detection, as the drop is a 17\%, much higher than the other parts.
+
+\stdfig{10cm}{ocr_initial_results}{Photo OCR results}
+
+
+%% Body end.
+
+%% Bibliography.
+
+\clearpage
+
+
+
+    \nocite{*}
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}
